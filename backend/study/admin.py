@@ -1,31 +1,25 @@
 from django.contrib import admin
 
-from .models import Exercise, Task, Word
+from .models import Result, Task, Topic, Word
 
 
-class TaskInline(admin.TabularInline):
-    model = Task
+class ResultInline(admin.TabularInline):
+    model = Result
     extra = 1
-
-
-class WordInline(admin.TabularInline):
-    """Inline word select widget."""
-    model = Exercise.words.through
-    extra = 1
-    verbose_name = 'слово'
-    verbose_name_plural = 'слова'
 
 
 @admin.register(Word)
 class WordAdmin(admin.ModelAdmin):
-    search_fields = ('origin', 'translation')
+    list_display = ['origin', 'translation', 'topic']
+    search_fields = ['origin', 'translation']
+    list_filter = ['topic']
 
 
-@admin.register(Exercise)
-class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ('topic', 'category', 'description', '_words')
-    inlines = (TaskInline, WordInline)
-    exclude = ('words',)
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ['topic', 'category']
+    inlines = [ResultInline]
+    exlude = ['users']
 
     def _words(self, obj):
         return list(obj.words.all())
@@ -33,6 +27,11 @@ class ExerciseAdmin(admin.ModelAdmin):
     _words.admin_order_field = 'words'
 
 
-@admin.register(Task)
-class TaskAdmin(admin.ModelAdmin):
-    list_display = ('exercise', 'user', 'correct', 'incorrect', 'passed')
+@admin.register(Result)
+class ResultAdmin(admin.ModelAdmin):
+    list_display = ['id', 'task', 'user', 'correct', 'incorrect', 'passed']
+
+
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']

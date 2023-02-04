@@ -4,9 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView, UpdateAPIView
 from rest_framework.response import Response
 
-from study.models import Task
-
-from .serializers import ExerciseSerializer, TaskUpdateSerializer
+from .serializers import ResultSerializer, TaskSerializer
+from study.models import Result
 
 User = get_user_model()
 
@@ -19,24 +18,22 @@ def hello(request):
 class UserTasksListView(ListAPIView):
     """User tasks list view."""
 
-    serializer_class = ExerciseSerializer
+    serializer_class = TaskSerializer
 
     def get_queryset(self):
         tg_id = self.kwargs.get('tg_id')
-        queryset = (get_object_or_404(User, tg_id=tg_id)
-                    .exercises.filter(tasks__passed=False)
-                    .prefetch_related('words'))
-        return queryset
+        return (get_object_or_404(User, tg_id=tg_id)
+                .tasks.filter(results__passed=False)
+                .prefetch_related('topic__words'))
 
 
-class UserTaskResultsUpdateView(UpdateAPIView):
-    """User task results update view."""
+class UserResultUpdateView(UpdateAPIView):
+    """User task result update view."""
 
-    queryset = Task.objects.all()
-    serializer_class = TaskUpdateSerializer
+    queryset = Result.objects.all()
+    serializer_class = ResultSerializer
 
     def get_object(self):
         queryset = self.get_queryset()
-        obj = get_object_or_404(queryset, user__tg_id=self.kwargs['tg_id'],
-                                exercise=self.kwargs['excercise_id'])
-        return obj
+        return get_object_or_404(queryset, user__tg_id=self.kwargs['tg_id'],
+                                 task=self.kwargs['task_id'])

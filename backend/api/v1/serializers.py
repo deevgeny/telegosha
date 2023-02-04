@@ -2,7 +2,7 @@ import random
 
 from rest_framework import serializers
 
-from study.models import Exercise, Task, Word
+from study.models import Result, Task, Word
 
 
 def prepare_quiz_questions(words: list) -> list:
@@ -69,26 +69,28 @@ class WordSerializer(serializers.ModelSerializer):
         fields = ['origin', 'translation']
 
 
-class ExerciseSerializer(serializers.ModelSerializer):
-    """Exercise model serializer."""
+class TaskSerializer(serializers.ModelSerializer):
+    """Task model serializer."""
 
+    topic = serializers.StringRelatedField()
     data = serializers.SerializerMethodField()
 
     class Meta:
-        model = Exercise
-        fields = ['id', 'category', 'topic', 'description', 'data']
+        model = Task
+        fields = ['id', 'category', 'topic', 'data']
 
     def get_data(self, obj):
-        queryset = obj.words.values_list('origin', 'translation')
-        if obj.category == Exercise.QUIZ:
+        queryset = obj.topic.words.values_list('origin', 'translation')
+        if obj.category == Task.QUIZ:
             return prepare_quiz_questions(list(queryset))
-        elif obj.category == Exercise.SPELLING:
+        if obj.category == Task.SPELLING:
             return prepare_spelling_questions(list(queryset))
+        return []
 
 
-class TaskUpdateSerializer(serializers.ModelSerializer):
-    """Task model update serializer."""
+class ResultSerializer(serializers.ModelSerializer):
+    """Result model update serializer."""
 
     class Meta:
-        model = Task
+        model = Result
         fields = ['correct', 'incorrect']

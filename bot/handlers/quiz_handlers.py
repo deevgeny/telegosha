@@ -6,17 +6,10 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
-from keyboards.user_keyboards import (
-    next_question_keyboard,
-    quiz_keyboard,
-    quiz_start_keyboard,
-    show_result_keyboard,
-)
+from handlers import callbacks
+from keyboards.user_keyboards import inline_keyboard, quiz_keyboard
 from lexicon.russian import QUIZ_LEXICON
 from services.api import backend_api
-
-# from typing import Any, Dict
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -42,7 +35,11 @@ async def quiz_intro(callback: CallbackQuery, state: FSMContext,
               f'{QUIZ_LEXICON["topic"]}{task["topic"].lower()}\n'
               f'{QUIZ_LEXICON["total_questions"]}{len(task["data"])}\n\n'
               f'{QUIZ_LEXICON["rules"]}'),
-        reply_markup=quiz_start_keyboard()
+        reply_markup=inline_keyboard(
+            buttons=[[QUIZ_LEXICON['start_button'], callbacks.START],
+                     [QUIZ_LEXICON['exit_button'], callbacks.EXIT]],
+            row_width=2
+        )
     )
 
 
@@ -50,6 +47,12 @@ async def start_quiz(callback: CallbackQuery, state: FSMContext) -> None:
     """Start quiz handler."""
     await state.set_state(Quiz.in_progress)
     await send_question(callback, state)
+
+
+async def exit_quiz(callback: CallbackQuery, state: FSMContext) -> None:
+    """Exit quiz handler."""
+    await state.reset_state()
+    await callback.message.delete()
 
 
 async def send_question(callback: CallbackQuery, state: FSMContext) -> None:
@@ -70,9 +73,15 @@ async def correct_answer(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(correct=data['correct'] + 1)
     if data['left'] == 0:
         await state.set_state(Quiz.show_result)
-        keyboard = show_result_keyboard()
+        keyboard = inline_keyboard(
+            buttons=[[QUIZ_LEXICON['result_button'], callbacks.SHOW_RESULT]],
+            row_width=1
+        )
     else:
-        keyboard = next_question_keyboard()
+        keyboard = inline_keyboard(
+            buttons=[[QUIZ_LEXICON['next_button'], callbacks.NEXT_QUESTION]],
+            row_width=1
+        )
     await callback.message.edit_text(
         text=(f'{QUIZ_LEXICON["title"]}'
               f'{random.choice(QUIZ_LEXICON["correct"])}'
@@ -87,9 +96,15 @@ async def incorrect_answer(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(incorrect=data['incorrect'] + 1)
     if data['left'] == 0:
         await state.set_state(Quiz.show_result)
-        keyboard = show_result_keyboard()
+        keyboard = inline_keyboard(
+            buttons=[[QUIZ_LEXICON['result_button'], callbacks.SHOW_RESULT]],
+            row_width=1
+        )
     else:
-        keyboard = next_question_keyboard()
+        keyboard = inline_keyboard(
+            buttons=[[QUIZ_LEXICON['next_button'], callbacks.NEXT_QUESTION]],
+            row_width=1
+        )
     await callback.message.edit_text(
         text=(f'{QUIZ_LEXICON["title"]}'
               f'{random.choice(QUIZ_LEXICON["incorrect"])}'
@@ -119,15 +134,19 @@ async def quiz_warning(message: Message):
 
 
 def register_quiz_handlers(dp: Dispatcher) -> None:
-    dp.register_callback_query_handler(
-        start_quiz, text='start', state=Quiz.intro)
-    dp.register_callback_query_handler(correct_answer, text='correct',
+    dp.register_callback_query_handler(start_quiz, text=callbacks.START,
+                                       state=Quiz.intro)
+    dp.register_callback_query_handler(exit_quiz, text=callbacks.EXIT,
+                                       state=Quiz.intro)
+    dp.register_callback_query_handler(correct_answer, text=callbacks.CORRECT,
                                        state=Quiz.in_progress)
-    dp.register_callback_query_handler(incorrect_answer, text='incorrect',
+    dp.register_callback_query_handler(incorrect_answer,
+                                       text=callbacks.INCORRECT,
                                        state=Quiz.in_progress)
-    dp.register_callback_query_handler(send_question, text='next_question',
+    dp.register_callback_query_handler(send_question,
+                                       text=callbacks.NEXT_QUESTION,
                                        state=Quiz.in_progress)
-    dp.register_callback_query_handler(quiz_result, text='show_result',
+    dp.register_callback_query_handler(quiz_result, text=callbacks.SHOW_RESULT,
                                        state=Quiz.show_result)
     dp.register_message_handler(
         quiz_warning, content_types='any',

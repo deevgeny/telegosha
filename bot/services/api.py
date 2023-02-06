@@ -2,11 +2,16 @@
 External API service connection module.
 """
 import asyncio
+import logging
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Optional
 
 import aiohttp
+from aiohttp.client_exceptions import ClientConnectionError
+
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
 
 
 @dataclass
@@ -26,10 +31,14 @@ class DjangoApiV1(BaseApi):
         """Return user assigned tasks."""
         url = f'{self.url}tasks/{user_tg_id}/'
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.status != HTTPStatus.OK:
-                    return []
-                return await resp.json()
+            try:
+                async with session.get(url) as resp:
+                    if resp.status != HTTPStatus.OK:
+                        return []
+                    return await resp.json()
+            except ClientConnectionError:
+                logger.error('Connection error')
+                return []
 
     async def update_user_task_results(self, user_tg_id: int, exercise_id: int,
                                        correct: int, incorrect: int) -> None:
@@ -37,9 +46,13 @@ class DjangoApiV1(BaseApi):
         url = f'{self.url}tasks/{user_tg_id}/{exercise_id}/'
         data = {'correct': correct, 'incorrect': incorrect}
         async with aiohttp.ClientSession() as session:
-            async with session.patch(url, json=data) as resp:
-                if resp.status == HTTPStatus.OK:
+            try:
+                async with session.patch(url, json=data) as resp:
+                    if resp.status == HTTPStatus.OK:
+                        return
                     return
+            except ClientConnectionError:
+                logger.error('Connection error')
                 return
 
 

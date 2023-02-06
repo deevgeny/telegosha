@@ -9,7 +9,7 @@ class User(AbstractUser):
     last_name = models.CharField(_("last name"), max_length=150)
     email = models.EmailField(_("email address"), unique=True, blank=True)
     tg_id = models.PositiveBigIntegerField(
-        verbose_name='телегам id',
+        verbose_name='Телеграм id',
         unique=True,
         blank=True,
         null=True

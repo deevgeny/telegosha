@@ -6,12 +6,10 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
-from keyboards.user_keyboards import spelling_start_keyboard
+from handlers import callbacks
+from keyboards.user_keyboards import inline_keyboard
 from lexicon.russian import SPELLING_LEXICON
 from services.api import backend_api
-
-# from typing import Any, Dict
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -29,14 +27,19 @@ async def spelling_intro(callback: CallbackQuery, state: FSMContext,
     await state.update_data(user_tg_id=callback.from_user.id,
                             exercise_id=task['id'],
                             questions=task['data'], correct=0, incorrect=0,
-                            left=len(task['data']), mistakes="")
+                            left=len(task['data']), mistakes='', spelling='',
+                            word='')
     await state.set_state(Spelling.intro)
     await callback.message.edit_text(
         text=(f'{SPELLING_LEXICON["title"]}'
               f'{SPELLING_LEXICON["topic"]}{task["topic"].lower()}\n'
               f'{SPELLING_LEXICON["total_questions"]}{len(task["data"])}\n\n'
               f'{SPELLING_LEXICON["rules"]}'),
-        reply_markup=spelling_start_keyboard()
+        reply_markup=inline_keyboard(
+            buttons=[[SPELLING_LEXICON['start_button'], callbacks.START],
+                     [SPELLING_LEXICON['exit_button'], callbacks.EXIT]],
+            row_width=2
+        )
     )
 
 
@@ -48,7 +51,7 @@ async def start_spelling(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 async def exit_spelling(callback: CallbackQuery, state: FSMContext) -> None:
-    """Start spelling handler."""
+    """Exit spelling handler."""
     await state.reset_state()
     await callback.message.delete()
 
@@ -79,7 +82,7 @@ async def check_spelling(message: Message, state: FSMContext) -> None:
         )
         await send_question(message, state)
     else:
-        mistake = (f'<s>{message.text.lower()}</s> - '
+        mistake = (f'{data["word"]} - <s>{message.text.lower()}</s> - '
                    f'{data["spelling"].lower()}\n')
         await state.update_data(
             incorrect=data['incorrect'] + 1,
@@ -109,8 +112,8 @@ async def show_result(message: Message, data: dict) -> None:
 
 def register_spelling_handlers(dp: Dispatcher) -> None:
     """Helper function to register spelling handlers."""
-    dp.register_callback_query_handler(start_spelling, text='start',
+    dp.register_callback_query_handler(start_spelling, text=callbacks.START,
                                        state=Spelling.intro)
-    dp.register_callback_query_handler(exit_spelling, text='exit',
+    dp.register_callback_query_handler(exit_spelling, text=callbacks.EXIT,
                                        state=Spelling.intro)
     dp.register_message_handler(check_spelling, state=Spelling.in_progress)

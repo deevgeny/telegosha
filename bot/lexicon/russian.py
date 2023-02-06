@@ -5,11 +5,15 @@ COMMANDS_LEXICON: dict[str, str] = {
                'выполнять следующие команды:\n\n'
                '/help - подсказка\n/quiz - словарный диктант\n/cancel - '
                'отменить задание'),
+    'start_description': 'задания',
     '/help': ('Я помощник для запоминания английских слов.\n'
               'Я могу проводить словарный диктант.\n'
               'Помогаю учить новые слова.\n\nЯ умею выполнять следующие '
               'команды:\n\n/help - подсказка\n/quiz - словарный диктант'
               '\n/cancel - отменить задание'),
+    'help_description': 'помощь',
+    'cancel_description': 'отмена',
+    'tasks_description': 'задания'
 }
 
 QUIZ_LEXICON: dict[str, str] = {
@@ -69,8 +73,8 @@ TASKS_LEXICON: dict[str, str] = {
     'title': '&#128203; <b>Задания</b>\n\n',
     'no_tasks': 'Новых заданий пока нет',
     'select_button': 'Выбрать',
-    'back_button': '<<',
-    'forward_button': '>>',
+    'prev_button': '<<',
+    'next_button': '>>',
     'quiz': 'Словарный тест',
     'spelling': 'Словарный диктант',
     'pointer': '&#128073;',

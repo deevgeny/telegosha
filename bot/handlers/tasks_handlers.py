@@ -6,7 +6,7 @@ Functionality:
 - During navigation, callback message is edited setting cursor to a selected
 task.
 - After pushing select button, user will be redirected to another module
-responsible for a specific task handling.
+handler responsible for a specific task handling.
 """
 
 import logging
@@ -16,10 +16,11 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
-from keyboards.user_keyboards import tasks_keyboard
+from keyboards.user_keyboards import inline_keyboard
 from lexicon.russian import TASKS_LEXICON
 from services.api import backend_api
 
+from . import callbacks
 from .quiz_handlers import quiz_intro
 from .spelling_handlers import spelling_intro
 
@@ -38,8 +39,16 @@ class Tasks(StatesGroup):
 
 
 def scroll_tasks_list(tasks: list, active_task: int = 0) -> str:
-    """Create tasks list message."""
-    msg = ""
+    """Create tasks scroll list message.
+
+    Input: list of tasks
+    Output:
+      task 1
+    > task 2 (active task with pointer)
+      task 3
+      ...
+    """
+    msg = ''
     for i in range(len(tasks)):
         if active_task == i:
             msg = msg + (f'{TASKS_LEXICON["pointer"]} '
@@ -59,7 +68,12 @@ async def tasks_command(message: Message, state: FSMContext) -> None:
         await message.answer(text=(f'{TASKS_LEXICON["title"]}'
                                    f'{TASKS_LEXICON["no_tasks"]}'))
     else:
-        keyboard = tasks_keyboard()
+        keyboard = inline_keyboard(
+            buttons=[[TASKS_LEXICON['prev_button'], callbacks.PREV_TASK],
+                     [TASKS_LEXICON['select_button'], callbacks.SELECT_TASK],
+                     [TASKS_LEXICON['next_button'], callbacks.NEXT_TASK]],
+            row_width=3
+        )
         tasks_list = scroll_tasks_list(data)
         await state.update_data(tasks=data, active_task=0)
         await state.set_state(Tasks.scroll)
@@ -113,9 +127,9 @@ async def next_task(callback: CallbackQuery, state: FSMContext):
 def register_tasks_handlers(dp: Dispatcher):
     """"Helper function to register tasks handlers."""
     dp.register_message_handler(tasks_command, commands='tasks')
-    dp.register_callback_query_handler(select_task, text='select_task',
+    dp.register_callback_query_handler(select_task, text=callbacks.SELECT_TASK,
                                        state=Tasks.scroll)
-    dp.register_callback_query_handler(next_task, text='next_task',
+    dp.register_callback_query_handler(next_task, text=callbacks.NEXT_TASK,
                                        state=Tasks.scroll)
-    dp.register_callback_query_handler(previous_task, text='previous_task',
+    dp.register_callback_query_handler(previous_task, text=callbacks.PREV_TASK,
                                        state=Tasks.scroll)

@@ -5,6 +5,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from http import HTTPStatus
+from os import environ
 from typing import Optional
 
 import aiohttp
@@ -25,7 +26,7 @@ class BaseApi():
 class DjangoApiV1(BaseApi):
     """Django API representation."""
 
-    url: str = "http://127.0.0.1:8000/api/v1/"
+    url: str = environ.get('BACKEND_URL', 'http://127.0.0.1:8000/api/v1/')
 
     async def get_user_tasks(self, user_tg_id: int) -> dict:
         """Return user assigned tasks."""
@@ -34,10 +35,13 @@ class DjangoApiV1(BaseApi):
             try:
                 async with session.get(url) as resp:
                     if resp.status != HTTPStatus.OK:
+                        logger.error(
+                            'Response status %s to url %s' % (resp.status, url)
+                        )
                         return []
                     return await resp.json()
             except ClientConnectionError:
-                logger.error('Connection error')
+                logger.error('Connection error to %s' % url)
                 return []
 
     async def update_user_task_results(self, user_tg_id: int, exercise_id: int,
@@ -52,7 +56,7 @@ class DjangoApiV1(BaseApi):
                         return
                     return
             except ClientConnectionError:
-                logger.error('Connection error')
+                logger.error('Connection error to %s' % url)
                 return
 
 

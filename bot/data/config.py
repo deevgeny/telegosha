@@ -1,5 +1,5 @@
-import os
 from dataclasses import dataclass
+from os import environ
 
 from dotenv import load_dotenv
 
@@ -17,4 +17,4 @@ class Config:
 
 
 def load_config(path: str | None = None) -> Config:
-    return Config(tg_bot=TgBot(token=os.getenv('TG_API_TOKEN')))
+    return Config(tg_bot=TgBot(token=environ.get('TG_API_TOKEN')))

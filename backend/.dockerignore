@@ -1,0 +1,6 @@
+db.sqlite3
+venv
+tests
+pytest.ini
+setup.cfg
+.pytest_cache

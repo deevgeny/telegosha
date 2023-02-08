@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +20,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_7sc4b26m&ga(rimir-t8vn74uawhi^r+)@vab6idztn+g!$5k'
+SECRET_KEY = environ.get(
+    'SECRET_KEY',
+    'django-insecure-_7sc4b26m&ga(rimir-t8vn74uawhi^r+)@vab6idztn+g!$5k'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(environ.get('DEBUG', True)))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '').split()
 
 
 # Application definition
@@ -78,8 +81,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': environ.get('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': environ.get('POSTGRES_USER'),
+        'PASSWORD': environ.get('POSTGRES_PASSWORD'),
+        'HOST': environ.get('DB_HOST'),
+        'PORT': environ.get('DB_PORT')
     }
 }
 
@@ -106,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'RU-ru'
+LANGUAGE_CODE = 'ru-Ru'
 
 TIME_ZONE = 'Europe/Moscow'
 
@@ -119,11 +126,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 # Custom user model
 

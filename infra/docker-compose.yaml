@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  database:
     image: postgres:13.0-alpine
     restart: always
     volumes:
@@ -10,20 +10,18 @@ services:
       - ./.env
 
   backend:
-    build: ../backend/
-    # image: deevgeny/telegosha_backend:latest
+    image: deevgeny/telegosha:backend-latest
     restart: always
     volumes:
       - static:/app/static/
       - media:/app/media/
     depends_on:
-      - db
+      - database
     env_file:
       - ./.env
   
   bot:
-    build: ../bot/
-    # image: deevgeny/telegosha_bot:latest
+    image: deevgeny/telegosha:bot-latest
     restart: always
     depends_on:
       - backend

@@ -6,6 +6,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from data.config import Config, load_config
 from handlers.menu_handlers import register_menu_handlers
+from handlers.progress_handlers import register_progress_handlers
 from handlers.quiz_handlers import register_quiz_handlers
 from handlers.spelling_handlers import register_spelling_handlers
 from handlers.tasks_handlers import register_tasks_handlers
@@ -34,6 +35,7 @@ async def main():
     register_quiz_handlers(dp)
     register_tasks_handlers(dp)
     register_spelling_handlers(dp)
+    register_progress_handlers(dp)
 
     try:
         await dp.start_polling()

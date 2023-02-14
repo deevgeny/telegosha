@@ -8,6 +8,10 @@ services:
       - database:/var/lib/postgresql/data/
     env_file:
       - ./.env
+  
+  redis:
+    image: redis:7.0-alpine
+    restart: always
 
   backend:
     image: deevgeny/telegosha:backend-latest
@@ -17,14 +21,24 @@ services:
       - media:/app/media/
     depends_on:
       - database
+      - redis
     env_file:
       - ./.env
+  
+  celery:
+     image: deevgeny/telegosha:celery-latest
+     restart: always
+     depends_on:
+       - backend
+     env_file:
+        - ./.env
   
   bot:
     image: deevgeny/telegosha:bot-latest
     restart: always
     depends_on:
       - backend
+      - celery
     env_file:
       - ./.env
 

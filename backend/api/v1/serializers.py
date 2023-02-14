@@ -34,9 +34,35 @@ class TaskSerializer(serializers.ModelSerializer):
         return []
 
 
-class ResultSerializer(serializers.ModelSerializer):
+class ResultUpdateSerializer(serializers.ModelSerializer):
     """Result model update serializer."""
 
     class Meta:
         model = Result
         fields = ['correct', 'incorrect']
+
+
+class ResultSerializer(serializers.ModelSerializer):
+    """Result model serializer."""
+
+    topic = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Result
+        fields = ['topic', 'category', 'passed']
+
+    def get_topic(self, obj):
+        return obj.task.topic.name
+
+    def get_category(self, obj):
+        return obj.task.get_category_display()
+
+
+class UserProgressSerializer(serializers.Serializer):
+    """User progress serializer."""
+
+    topics = serializers.IntegerField()
+    words = serializers.IntegerField()
+    total_tasks = serializers.IntegerField()
+    passed_tasks = serializers.IntegerField()

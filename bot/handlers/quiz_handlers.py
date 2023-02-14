@@ -9,7 +9,7 @@ from aiogram.types import CallbackQuery, Message
 from handlers import callbacks
 from keyboards.user_keyboards import inline_keyboard, quiz_keyboard
 from lexicon.russian import QUIZ_LEXICON
-from services.api import backend_api
+from misc.api import backend_api
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

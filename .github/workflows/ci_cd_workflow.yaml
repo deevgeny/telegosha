@@ -28,7 +28,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         context: ./backend/
-        file: ./backend/Dockerfile
+        file: ./backend/backend.Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:backend-latest
     
@@ -54,11 +54,34 @@ jobs:
         file: ./bot/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:bot-latest
-  
+   
+  build_celery:
+    name: Build and push celery image
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Login to Dockerhub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Build and push
+      uses: docker/build-push-action@v3
+      with:
+        context: ./backend/
+        file: ./backend/celery.Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:celery-latest
+
   deploy:
     name: Deploy to server
     runs-on: ubuntu-latest
-    needs: [build_backend, build_bot]
+    needs: [build_backend, build_bot, build_celery]
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
@@ -73,6 +96,8 @@ jobs:
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose stop
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose rm -fs backend
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:backend-latest
+          echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose rm -fs celery
+          echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:celery-latest
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose rm -fs bot
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:bot-latest
           echo # Backend & database settings > .env
@@ -89,6 +114,8 @@ jobs:
           echo # Bot settings >> .env
           echo TG_API_TOKEN=${{ secrets.ENV_TG_API_TOKEN }} >> .env
           echo BACKEND_URL=${{ secrets.ENV_BACKEND_URL }} >> .env
+          echo # Celery settings >> .env
+          echo CELERY_BROKER_URL=${{ secrets.ENV_CELERY_BROKER_URL }} >> .env
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker image prune -f
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose up -d
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose exec -T backend python manage.py makemigrations

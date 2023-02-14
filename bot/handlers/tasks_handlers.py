@@ -18,7 +18,7 @@ from aiogram.types import CallbackQuery, Message
 
 from keyboards.user_keyboards import inline_keyboard
 from lexicon.russian import TASKS_LEXICON
-from services.api import backend_api
+from misc.api import backend_api
 
 from . import callbacks
 from .quiz_handlers import quiz_intro
@@ -64,7 +64,10 @@ def scroll_tasks_list(tasks: list, active_task: int = 0) -> str:
 async def tasks_command(message: Message, state: FSMContext) -> None:
     """Handler for /tasks menu command."""
     data = await backend_api.get_user_tasks(user_tg_id=message.from_user.id)
-    if len(data) == 0:
+    if isinstance(data, dict) and 'detail' in data:
+        await message.answer(text=(f'{TASKS_LEXICON["title"]}'
+                                   f'{TASKS_LEXICON[data["detail"]]}'))
+    elif isinstance(data, list) and len(data) == 0:
         await message.answer(text=(f'{TASKS_LEXICON["title"]}'
                                    f'{TASKS_LEXICON["no_tasks"]}'))
     else:

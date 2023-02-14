@@ -5,3 +5,6 @@ class StudyConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'study'
     verbose_name = 'занятия'
+
+    def ready(self):
+        import study.signals

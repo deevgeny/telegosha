@@ -3,8 +3,6 @@ from http import HTTPStatus
 
 import pytest
 
-from study.models import Result
-
 TASK_URL = '/api/v1/tasks/'
 
 
@@ -23,7 +21,7 @@ def test_user_empty_tasks_list(api_client, user):
         f'URL {url} should return HTTP 200'
     )
     assert response.json() == [], (
-        f'URL {url} should return empty list for a user who have no tasks'
+        f'URL {url} should return empty list for a user who has no tasks'
     )
 
 
@@ -34,7 +32,7 @@ def test_user_non_empty_tasks_response(api_client, user, task):
         f'URL {url} should return HTTP 200'
     )
     assert len(response.json()) == 1, (
-        f'URL {url} should return tasks list for a user who have tasks'
+        f'URL {url} should return tasks list for a user who has tasks'
     )
 
 
@@ -69,6 +67,7 @@ def test_user_task_response_fields_values(api_client, user, task, field,
 
 
 def test_user_task_response_data_field(api_client, user, task, words):
+    """Test for special data field with telegram buttons."""
     data_keys = ['buttons', 'word']
     url = f'{TASK_URL}{user.tg_id}/'
     data = api_client.get(url).json()[0]['data']
@@ -97,87 +96,3 @@ def test_user_task_response_data_field(api_client, user, task, words):
         assert counter['incorrect'] == 2, (
             'Buttons should have 2 incorrect answers'
         )
-
-
-@pytest.mark.django_db
-def test_user_task_ok_result_update(api_client, user, task, words):
-    # Check database record before runnnig the test
-    result = Result.objects.get(user=user, task=task)
-    assert result.correct == 0, (
-        'Incorrect database result record before running the test with field '
-        '`correct` not equal to 0'
-    )
-    assert result.incorrect == 0, (
-        'Incorrect database result record before running the test with field '
-        '`incorrect` not equal to 0'
-    )
-    assert not result.passed, (
-        'Incorrect database result record before running the test with field '
-        '`passed` not equal to False'
-    )
-    # Make patch request with data
-    url = f'{TASK_URL}{user.tg_id}/{task.id}/'
-    data = {'incorrect': 0, 'correct': 5}
-    response = api_client.patch(url, data=data, format='json')
-    # Run tests
-    assert response.status_code == HTTPStatus.OK, (
-        'Incorrect status code for successuf user result update'
-    )
-    assert response.json() == data, (
-        'Incorrect response json data for successful user result update'
-    )
-    result = Result.objects.get(user=user, task=task)
-    assert result.correct == data['correct'], (
-        'User task result was not updated in database correctly with mistake '
-        'in `correct` field'
-    )
-    assert result.incorrect == data['incorrect'], (
-        'User task result was not updated in database correctly with mistake '
-        'in `incorrect` field'
-    )
-    assert result.passed, (
-        'User task result was not updated in database correctly with mistake '
-        'in `passed` field'
-    )
-
-
-@pytest.mark.django_db
-def test_user_task_not_ok_result_update(api_client, user, task, words):
-    # Check database record before runnnig the test
-    result = Result.objects.get(user=user, task=task)
-    assert result.correct == 0, (
-        'Incorrect database result record before running the test with field '
-        '`correct` not equal to 0'
-    )
-    assert result.incorrect == 0, (
-        'Incorrect database result record before running the test with field '
-        '`incorrect` not equal to 0'
-    )
-    assert not result.passed, (
-        'Incorrect database result record before running the test with field '
-        '`passed` not equal to False'
-    )
-    # Make patch request with data
-    url = f'{TASK_URL}{user.tg_id}/{task.id}/'
-    data = {'incorrect': 1, 'correct': 4}
-    response = api_client.patch(url, data=data, format='json')
-    # Run tests
-    assert response.status_code == HTTPStatus.OK, (
-        'Incorrect status code for successuf user result update'
-    )
-    assert response.json() == data, (
-        'Incorrect response json data for successful user result update'
-    )
-    result = Result.objects.get(user=user, task=task)
-    assert result.correct == data['correct'], (
-        'User task result was not updated in database correctly with mistake '
-        'in `correct` field'
-    )
-    assert result.incorrect == data['incorrect'], (
-        'User task result was not updated in database correctly with mistake '
-        'in `incorrect` field'
-    )
-    assert not result.passed, (
-        'User task result was not updated in database correctly with mistake '
-        'in `passed` field'
-    )

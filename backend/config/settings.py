@@ -30,7 +30,6 @@ DEBUG = bool(int(environ.get('DEBUG', True)))
 
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS', '').split()
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -141,3 +140,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom user model
 
 AUTH_USER_MODEL = 'users.User'
+
+
+# Celery
+
+CELERY_BROKER_URL = environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/')

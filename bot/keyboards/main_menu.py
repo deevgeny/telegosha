@@ -8,6 +8,8 @@ async def set_main_menu(dp: Dispatcher):
     main_menu_commands = [
         types.BotCommand(command='/tasks',
                          description=COMMANDS_LEXICON['tasks_description']),
+        types.BotCommand(command='/progress',
+                         description=COMMANDS_LEXICON['progress_description']),
         types.BotCommand(command='/cancel',
                          description=COMMANDS_LEXICON['cancel_description']),
         types.BotCommand(command='/help',

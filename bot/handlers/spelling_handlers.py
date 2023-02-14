@@ -105,8 +105,8 @@ async def show_result(message: Message, data: dict) -> None:
               f'{data["mistakes"]}')
     )
     await backend_api.update_user_task_results(
-        data['user_tg_id'], data['exercise_id'], data['correct'],
-        data['incorrect']
+        user_tg_id=data['user_tg_id'], exercise_id=data['exercise_id'],
+        incorrect=data['incorrect'], correct=data['correct']
     )
 
 

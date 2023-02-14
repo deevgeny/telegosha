@@ -122,10 +122,10 @@ async def quiz_result(callback: CallbackQuery, state: FSMContext) -> None:
             f'{QUIZ_LEXICON["total_correct"]}{data["correct"]}\n'
             f'{QUIZ_LEXICON["total_incorrect"]}{data["incorrect"]}')
     await callback.message.edit_text(text=text)
-    await backend_api.update_user_task_results(data['user_tg_id'],
-                                               data['exercise_id'],
-                                               data['correct'],
-                                               data['incorrect'])
+    await backend_api.update_user_task_results(
+        user_tg_id=data['user_tg_id'], exercise_id=data['exercise_id'],
+        incorrect=data['incorrect'], correct=data['correct']
+    )
 
 
 async def quiz_warning(message: Message):

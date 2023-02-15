@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from http import HTTPStatus
 from os import environ
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Union
 
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
@@ -15,17 +15,12 @@ logger.setLevel(level=logging.INFO)
 
 
 @dataclass
-class BaseApi():
-    """Base class for API service."""
-    url: str
-    access_token: Optional[str] = None
-
-
-@dataclass
-class DjangoApiV1(BaseApi):
-    """Django API representation."""
+class BackendApiV1():
+    """Backend v1 API class."""
 
     NOT_FOUND: ClassVar[dict] = {'detail': 'not_found'}
+    SERVER_ERROR: ClassVar[dict] = {'detail': 'server_error'}
+    CONNECTION_ERROR: ClassVar[dict] = {'detail': 'connection_error'}
     url: str = environ.get('BACKEND_URL', 'http://127.0.0.1:8000/api/v1/')
 
     async def get_user_tasks(self, user_tg_id: int) -> dict:
@@ -41,15 +36,14 @@ class DjangoApiV1(BaseApi):
                     logger.error(
                         'Response status %s to url %s' % (resp.status, url)
                     )
-                    return {'detail': 'server_error'}
+                    return self.SERVER_ERROR
             except ClientConnectionError:
                 logger.error('Connection error to %s' % url)
-                return {'detail': 'connection_error'}
+                return self.CONNECTION_ERROR
 
     async def update_user_task_results(self, user_tg_id: int, exercise_id: int,
                                        incorrect: int,
-                                       correct: int) -> Union[dict, list,
-                                                              None]:
+                                       correct: int) -> Union[dict, list]:
         """Update user task results."""
         url = f'{self.url}results/{user_tg_id}/{exercise_id}/'
         data = {'correct': correct, 'incorrect': incorrect}
@@ -57,14 +51,14 @@ class DjangoApiV1(BaseApi):
             try:
                 async with session.patch(url, json=data) as resp:
                     if resp.status == HTTPStatus.OK:
-                        return None
+                        return await resp.json()
                     if resp.status == HTTPStatus.NOT_FOUND:
                         return self.NOT_FOUND
             except ClientConnectionError:
                 logger.error('Connection error to %s' % url)
-                return None
+                return self.CONNECTION_ERROR
 
-    async def get_user_progress(self, user_tg_id: int) -> Optional[dict]:
+    async def get_user_progress(self, user_tg_id: int) -> dict:
         """Get user progress data."""
         url = f'{self.url}progress/{user_tg_id}/'
         async with aiohttp.ClientSession() as session:
@@ -74,10 +68,10 @@ class DjangoApiV1(BaseApi):
                         return await resp.json()
                     if resp.status == HTTPStatus.NOT_FOUND:
                         return self.NOT_FOUND
-                    return None
+                    return self.SERVER_ERROR
             except ClientConnectionError:
                 logger.error('Connection error to %s' % url)
-                return {'detail': 'connection_error'}
+                return self.CONNECTION_ERROR
 
 
-backend_api = DjangoApiV1()
+backend_api = BackendApiV1()

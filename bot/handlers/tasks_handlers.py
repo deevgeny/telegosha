@@ -17,7 +17,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from keyboards.user_keyboards import inline_keyboard
-from lexicon.russian import TASKS_LEXICON
+from lexicon.russian import API_ERROR_LEXICON, TASKS_LEXICON
 from misc.api import backend_api
 
 from . import callbacks
@@ -66,7 +66,7 @@ async def tasks_command(message: Message, state: FSMContext) -> None:
     data = await backend_api.get_user_tasks(user_tg_id=message.from_user.id)
     if isinstance(data, dict) and 'detail' in data:
         await message.answer(text=(f'{TASKS_LEXICON["title"]}'
-                                   f'{TASKS_LEXICON[data["detail"]]}'))
+                                   f'{API_ERROR_LEXICON[data["detail"]]}'))
     elif isinstance(data, list) and len(data) == 0:
         await message.answer(text=(f'{TASKS_LEXICON["title"]}'
                                    f'{TASKS_LEXICON["no_tasks"]}'))

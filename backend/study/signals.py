@@ -65,10 +65,11 @@ def create_topic_tasks(sender, instance, action, pk_set, **kwargs):
         message = ('Привет!\n\nПоявилась новая тема для изучения: '
                    f'{instance.name.lower()}.\nЗадания можно найти в '
                    'меню > задания или с помощью команды /tasks.')
-        args = [[user.id,
+        args = [(user.tg_id,
                  os.environ.get('TG_API_TOKEN'),
-                 message] for user in users]
+                 message) for user in users]
         try:
+            logger.info(args)
             send_telegram_message.starmap(args).delay()
         except OperationalError as exc:
             logger.error('Sending task raised: %r' % exc)

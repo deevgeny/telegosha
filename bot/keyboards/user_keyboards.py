@@ -1,10 +1,10 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-def quiz_keyboard(buttons: list[dict[str, str]]) -> InlineKeyboardMarkup:
-    """Quiz keyboard.
+def test_keyboard(buttons: list[dict[str, str]]) -> InlineKeyboardMarkup:
+    """Test keyboard.
 
-    Create quiz buttons based on api data response.
+    Create test buttons based on api data response.
     Input data:
       buttons: [{'button_text': 'callback'}, ...]
     Input example:

@@ -1,5 +1,7 @@
 import pytest
 
+from users.models import SchoolGroup
+
 
 @pytest.fixture
 def user_no_name(django_user_model):
@@ -34,3 +36,11 @@ def user_client(user, client):
 def user_1_client(user_1, client):
     client.force_login(user_1)
     return client
+
+
+@pytest.fixture
+def school_group(db, user):
+    return SchoolGroup.objects.create(
+        grade='1A',
+        name='1'
+    )

@@ -1,10 +1,10 @@
 from rest_framework import serializers
 
 from api.data_processors import (
-    prepare_quiz_questions,
     prepare_spelling_questions,
+    prepare_test_questions,
 )
-from study.models import Result, Task, Word
+from study.models import Task, Word
 
 
 class WordSerializer(serializers.ModelSerializer):
@@ -27,36 +27,35 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_data(self, obj):
         queryset = obj.topic.words.values_list('origin', 'translation')
-        if obj.category == Task.QUIZ:
-            return prepare_quiz_questions(list(queryset))
-        if obj.category == Task.SPELLING:
+        if obj.category == Task.INTRO:
+            return list(queryset)
+        if obj.category in [Task.TEST, Task.LEARN]:
+            return prepare_test_questions(list(queryset))
+        if obj.category == Task.SPELL:
             return prepare_spelling_questions(list(queryset))
         return []
 
 
-class ResultUpdateSerializer(serializers.ModelSerializer):
-    """Result model update serializer."""
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    """Task model update serializer."""
 
     class Meta:
-        model = Result
+        model = Task
         fields = ['correct', 'incorrect']
 
 
-class ResultSerializer(serializers.ModelSerializer):
-    """Result model serializer."""
+class TaskResultSerializer(serializers.ModelSerializer):
+    """Task model serializer to display results."""
 
-    topic = serializers.SerializerMethodField()
+    topic = serializers.StringRelatedField()
     category = serializers.SerializerMethodField()
 
     class Meta:
-        model = Result
+        model = Task
         fields = ['topic', 'category', 'passed']
 
-    def get_topic(self, obj):
-        return obj.task.topic.name
-
     def get_category(self, obj):
-        return obj.task.get_category_display()
+        return obj.get_category_display()
 
 
 class UserProgressSerializer(serializers.Serializer):

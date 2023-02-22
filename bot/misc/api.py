@@ -41,11 +41,11 @@ class BackendApiV1():
                 logger.error('Connection error to %s' % url)
                 return self.CONNECTION_ERROR
 
-    async def update_user_task_results(self, user_tg_id: int, exercise_id: int,
+    async def update_user_task_results(self, user_tg_id: int, task_id: int,
                                        incorrect: int,
                                        correct: int) -> Union[dict, list]:
         """Update user task results."""
-        url = f'{self.url}results/{user_tg_id}/{exercise_id}/'
+        url = f'{self.url}tasks/{user_tg_id}/{task_id}/'
         data = {'correct': correct, 'incorrect': incorrect}
         async with aiohttp.ClientSession() as session:
             try:
@@ -54,6 +54,7 @@ class BackendApiV1():
                         return await resp.json()
                     if resp.status == HTTPStatus.NOT_FOUND:
                         return self.NOT_FOUND
+                    logger.error('Task %s results were not saved' % task_id)
             except ClientConnectionError:
                 logger.error('Connection error to %s' % url)
                 return self.CONNECTION_ERROR

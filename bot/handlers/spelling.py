@@ -1,3 +1,16 @@
+"""
+This module is responsible for new words spelling task.
+
+Steps:
+- User receives message with new word query message with 3 answer options.
+- User types word translation and sends answer message.
+- If answer is correct, correct counter increased by 1 and user receives
+  next new word.
+- If answer is incorrect, incorrect counter increased by 1 and user recieves
+  next word.
+- When all new words run out, user receives task feedback.
+- Correct and incorrect answers saved on server.
+"""
 import logging
 import random
 
@@ -21,16 +34,16 @@ class Spelling(StatesGroup):
     show_result = State()
 
 
-async def spelling_intro(callback: CallbackQuery, state: FSMContext,
-                         task: dict) -> None:
+async def spelling_entry_point(message: Message, state: FSMContext,
+                               task: dict) -> None:
     """Spelling entry point from tasks handlers."""
-    await state.update_data(user_tg_id=callback.from_user.id,
-                            exercise_id=task['id'],
+    await state.update_data(user_tg_id=message.from_user.id,
+                            task_id=task['id'],
                             questions=task['data'], correct=0, incorrect=0,
                             left=len(task['data']), mistakes='', spelling='',
                             word='')
     await state.set_state(Spelling.intro)
-    await callback.message.edit_text(
+    await message.answer(
         text=(f'{SPELLING_LEXICON["title"]}'
               f'{SPELLING_LEXICON["topic"]}{task["topic"].lower()}\n'
               f'{SPELLING_LEXICON["total_questions"]}{len(task["data"])}\n\n'
@@ -64,7 +77,7 @@ async def send_question(message: Message, state: FSMContext) -> None:
         await show_result(message, data)
         return
     # Use negative index to get questions from the list
-    question = data['questions'][- data['left']]
+    question = data['questions'][-data['left']]
     await state.update_data(left=data['left'] - 1,
                             spelling=question['spelling'],
                             word=question['word'])
@@ -105,7 +118,7 @@ async def show_result(message: Message, data: dict) -> None:
               f'{data["mistakes"]}')
     )
     await backend_api.update_user_task_results(
-        user_tg_id=data['user_tg_id'], exercise_id=data['exercise_id'],
+        user_tg_id=data['user_tg_id'], task_id=data['task_id'],
         incorrect=data['incorrect'], correct=data['correct']
     )
 

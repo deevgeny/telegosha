@@ -5,11 +5,13 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from data.config import Config, load_config
-from handlers.menu_handlers import register_menu_handlers
-from handlers.progress_handlers import register_progress_handlers
-from handlers.quiz_handlers import register_quiz_handlers
-from handlers.spelling_handlers import register_spelling_handlers
-from handlers.tasks_handlers import register_tasks_handlers
+from handlers.intro import register_intro_handlers
+from handlers.learn import register_learn_handlers
+from handlers.menu import register_menu_handlers
+from handlers.progress import register_progress_handlers
+from handlers.spelling import register_spelling_handlers
+from handlers.tasks import register_tasks_handlers
+from handlers.test import register_test_handlers
 from keyboards.main_menu import set_main_menu
 
 logger = logging.getLogger(__name__)
@@ -32,10 +34,12 @@ async def main():
 
     # Register handlers
     register_menu_handlers(dp)
-    register_quiz_handlers(dp)
+    register_learn_handlers(dp)
+    register_test_handlers(dp)
     register_tasks_handlers(dp)
     register_spelling_handlers(dp)
     register_progress_handlers(dp)
+    register_intro_handlers(dp)
 
     try:
         await dp.start_polling()

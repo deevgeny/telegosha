@@ -1,13 +1,13 @@
 """
-Data processors for database data.
+Data processors module.
 
-Helper functions to process and prepare data for telegram bot.
+Helper functions to process and prepare data for specific telegram bot tasks.
 """
 import random
 
 
-def prepare_quiz_questions(words: list) -> list:
-    """Prepare quiz questions with buttons from database data.
+def prepare_test_questions(words: list) -> list:
+    """Prepare test questions with buttons from database data.
 
     Input:
     [('blue', 'синий'), ('green', 'зеленый'), ('red', 'красный'),
@@ -23,8 +23,9 @@ def prepare_quiz_questions(words: list) -> list:
     counts = [1] * len(words)  # Sampling map
     questions = []
     for i in range(len(words)):
-        # Add word and correct button
-        q = {'word': words[i][1], 'buttons': [{words[i][0]: 'correct'}]}
+        # Add word, origin and correct button
+        q = {'word': words[i][1], 'origin': words[i][0],
+             'buttons': [{words[i][0]: 'correct'}]}
         # Remove current word from sampling map
         counts[i] -= 1
         # Sample 2 incorrect buttons

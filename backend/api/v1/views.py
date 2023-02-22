@@ -7,12 +7,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import (
-    ResultSerializer,
-    ResultUpdateSerializer,
     TaskSerializer,
+    TaskUpdateSerializer,
     UserProgressSerializer,
 )
-from study.models import Result
+from study.models import Task
 
 User = get_user_model()
 
@@ -29,11 +28,11 @@ class UserProgressVeiw(APIView):
             User.objects.annotate(
                 topics=Count('tasks__topic', distinct=True),
                 words=Count('tasks__topic__words',
-                            filter=Q(results__passed=True),
+                            filter=Q(tasks__passed=True),
                             distinct=True),
-                total_tasks=Count('results', distinct=True),
-                passed_tasks=Count('results',
-                                   filter=Q(results__passed=True),
+                total_tasks=Count('tasks', distinct=True),
+                passed_tasks=Count('tasks',
+                                   filter=Q(tasks__passed=True),
                                    distinct=True)),
             tg_id=tg_id
         )
@@ -41,7 +40,7 @@ class UserProgressVeiw(APIView):
         return Response(serializer.data)
 
 
-class UserTasksListView(ListAPIView):
+class UserTaskListView(ListAPIView):
     """User tasks list view."""
 
     serializer_class = TaskSerializer
@@ -49,28 +48,17 @@ class UserTasksListView(ListAPIView):
     def get_queryset(self):
         tg_id = self.kwargs.get('tg_id')
         return (get_object_or_404(User, tg_id=tg_id)
-                .tasks.filter(results__passed=False)
+                .tasks.filter(passed=False, active=True)
                 .prefetch_related('topic__words'))
 
 
-class UserResultUpdateView(UpdateAPIView):
-    """User task result update view."""
+class UserTaskUpdateView(UpdateAPIView):
+    """User task update view."""
 
-    queryset = Result.objects.all()
-    serializer_class = ResultUpdateSerializer
+    queryset = Task.objects.all()
+    serializer_class = TaskUpdateSerializer
 
     def get_object(self):
         queryset = self.get_queryset()
         return get_object_or_404(queryset, user__tg_id=self.kwargs['tg_id'],
-                                 task=self.kwargs['task_id'])
-
-
-class UserResultsListView(ListAPIView):
-    """User results list view."""
-
-    serializer_class = ResultSerializer
-
-    def get_queryset(self):
-        return (Result.objects
-                .filter(user__tg_id=self.kwargs['tg_id'])
-                .select_related('task', 'task__topic'))
+                                 id=self.kwargs['task_id'])

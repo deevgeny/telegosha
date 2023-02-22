@@ -1,44 +1,22 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from users.models import SchoolGroup
+
 User = get_user_model()
 
 
-class Topic(models.Model):
-    """Topic model."""
-    name = models.CharField(
-        verbose_name='Тема',
-        max_length=150,
-        help_text='Укажите тему (категорию) слов',
-        unique=True
-    )
-
-    class Meta:
-        verbose_name = 'тема'
-        verbose_name_plural = 'темы'
-
-    def __str__(self):
-        return self.name
-
-
 class Word(models.Model):
-    """Vocabulary model."""
+    """Word model."""
     origin = models.CharField(
         verbose_name='Слово',
-        max_length=30,
+        max_length=32,
         help_text='Слово на иностранном языке'
     )
     translation = models.CharField(
         verbose_name='Перевод',
-        max_length=30,
+        max_length=32,
         help_text='Значение на родном языке'
-    )
-    topic = models.ForeignKey(
-        Topic,
-        verbose_name='Тема',
-        on_delete=models.PROTECT,
-        help_text='Выберите тематику слова',
-        related_name='words'
     )
 
     class Meta:
@@ -50,13 +28,58 @@ class Word(models.Model):
         return f'{self.origin} - {self.translation}'
 
 
+class Topic(models.Model):
+    """Topic model."""
+    name = models.CharField(
+        verbose_name='Название',
+        max_length=32,
+        help_text='Укажите тему (категорию) слов',
+        unique=True
+    )
+    description = models.CharField(
+        verbose_name='Описание',
+        max_length=128,
+        help_text='Краткое описание темы',
+        blank=True
+    )
+    school_groups = models.ManyToManyField(
+        SchoolGroup,
+        related_name='topics',
+        verbose_name='Группы',
+        help_text='Выбрать группы'
+    )
+    words = models.ManyToManyField(
+        Word,
+        related_name='topics',
+        verbose_name='Слова',
+        help_text='Выбрать слова'
+    )
+
+    class Meta:
+        verbose_name = 'тема'
+        verbose_name_plural = 'темы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'description'],
+                name='Тема с таким названием и описанием уже существует'
+            )
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class Task(models.Model):
     """Task model."""
 
-    QUIZ = 'quiz'
-    SPELLING = 'spelling'
-    CATEGORY_CHOICES = [(QUIZ, 'Тест'),
-                        (SPELLING, 'Правописание')]
+    INTRO = 'intro'
+    LEARN = 'learn'
+    TEST = 'test'
+    SPELL = 'spell'
+    CATEGORY_CHOICES = [(INTRO, 'Знакомство'),
+                        (LEARN, 'Запоминание'),
+                        (TEST, 'Тест'),
+                        (SPELL, 'Правописание')]
     topic = models.ForeignKey(
         Topic,
         verbose_name='Тема',
@@ -70,35 +93,12 @@ class Task(models.Model):
         help_text='Категория задания',
         choices=CATEGORY_CHOICES,
     )
-    users = models.ManyToManyField(
-        User,
-        verbose_name='Ученики',
-        help_text='Выбрать учеников, чтобы назначить им задачу',
-        related_name='tasks',
-        through='Result'
-    )
-
-    class Meta:
-        verbose_name = 'задание'
-        verbose_name_plural = 'задания'
-
-    def __str__(self):
-        return f'{self.get_category_display()} - {self.topic}'
-
-
-class Result(models.Model):
-    """Result model."""
-    task = models.ForeignKey(
-        Task,
-        verbose_name='Задание',
-        on_delete=models.CASCADE,
-        related_name='results'
-    )
     user = models.ForeignKey(
         User,
-        verbose_name='Ученик',
         on_delete=models.CASCADE,
-        related_name='results'
+        verbose_name='Ученик',
+        help_text='Выбрать ученика, чтобы назначить ему задание',
+        related_name='tasks'
     )
     correct = models.PositiveSmallIntegerField(
         verbose_name='Верно',
@@ -108,26 +108,37 @@ class Result(models.Model):
         verbose_name='Неверно',
         default=0,
     )
+    attempts = models.PositiveSmallIntegerField(
+        verbose_name='Попытки',
+        default=0,
+    )
+    active = models.BooleanField(
+        verbose_name='Активное',
+        default=True,
+    )
     passed = models.BooleanField(
         verbose_name='Пройдено',
         default=False,
     )
 
     class Meta:
-        verbose_name = 'результат'
-        verbose_name_plural = 'результаты'
+        verbose_name = 'задание'
+        verbose_name_plural = 'задания'
         constraints = [
             models.UniqueConstraint(
-                fields=['task', 'user'],
-                name='Пользователю можно назначить только одно задание'
-            )
+                fields=['topic', 'category', 'user'],
+                name='Такое задание у пользователя уже существует'
+            ),
         ]
 
     def __str__(self):
-        return f'{self.task} {self.user}'
+        return f'{self.get_category_display()} - {self.topic}'
 
     def save(self, *args, **kwargs):
-        """Update passed field."""
+        """Update attempts, passed and active fields."""
+        if self.id and (self.correct or self.incorrect):
+            self.attempts += 1
         if self.incorrect == 0 and self.correct > 0:
             self.passed = True
-        super(Result, self).save(*args, **kwargs)
+            self.active = False
+        super(Task, self).save(*args, **kwargs)

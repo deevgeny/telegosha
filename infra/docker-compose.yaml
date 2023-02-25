@@ -39,6 +39,8 @@ services:
   bot:
     image: deevgeny/telegosha:bot-latest
     restart: always
+    volumes:
+      - media:/app/media/
     depends_on:
       - backend
       - celery

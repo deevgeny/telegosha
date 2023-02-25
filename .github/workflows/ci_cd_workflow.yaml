@@ -113,7 +113,6 @@ jobs:
           echo ALLOWED_HOSTS=${{ secrets.HOST }} ${{ secrets.ENV_ALLOWED_HOSTS }} >> .env
           echo '# Bot settings' >> .env
           echo TG_API_TOKEN=${{ secrets.ENV_TG_API_TOKEN }} >> .env
-          echo SOUND_URL=${{ secrets.ENV_SOUND_URL }} >> .env
           echo BACKEND_URL=${{ secrets.ENV_BACKEND_URL }} >> .env
           echo '# Celery settings' >> .env
           echo CELERY_BROKER_URL=${{ secrets.ENV_CELERY_BROKER_URL }} >> .env

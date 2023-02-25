@@ -8,12 +8,11 @@ Steps:
 - Task result is saved on server.
 """
 import logging
-from os import environ
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import CallbackQuery, ContentType, Message
+from aiogram.types import CallbackQuery, ContentType, InputFile, Message
 
 from handlers import callbacks
 from keyboards.user_keyboards import inline_keyboard
@@ -83,9 +82,13 @@ async def send_word(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(left=data['left'] - 1)
     await callback.message.delete()
     if question.get('sound'):
+        # Get sound from shared docker volume
+        audio = InputFile(question['sound'])
         await callback.message.answer_audio(
             caption=f'{question["origin"]} - {question["translation"]}',
-            audio=f'{environ.get("SOUND_URL")}{question["sound"]}',
+            title=question['origin'],
+            audio=audio,
+            # performer='Telegosha',
             reply_markup=keyboard
         )
     else:

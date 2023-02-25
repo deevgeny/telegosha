@@ -81,7 +81,7 @@ async def send_word(callback: CallbackQuery, state: FSMContext) -> None:
     question = data['questions'][-data['left']]
     await state.update_data(left=data['left'] - 1)
     await callback.message.delete()
-    # url = 'https://download.samplelib.com/mp3/sample-3s.mp3'
+    #url = 'https://download.samplelib.com/mp3/sample-3s.mp3'
     if question.get('sound'):
         await callback.message.answer_audio(
             caption=f'{question["origin"]} - {question["translation"]}',

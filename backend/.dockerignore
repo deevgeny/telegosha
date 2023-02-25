@@ -4,3 +4,5 @@ tests
 pytest.ini
 setup.cfg
 .pytest_cache
+*.mp3
+.gitkeep

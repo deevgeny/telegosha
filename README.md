@@ -3,7 +3,6 @@
 ![tests workflow](https://github.com/deevgeny/telegosha/actions/workflows/tests_workflow.yaml/badge.svg)
 ![CI/CD workflow](https://github.com/deevgeny/telegosha/actions/workflows/ci_cd_workflow.yaml/badge.svg)
 
-
 Школьный помощник для запоминания иностранных слов.
 
 ## О проекте

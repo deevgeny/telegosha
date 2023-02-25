@@ -28,6 +28,9 @@ services:
   celery:
      image: deevgeny/telegosha:celery-latest
      restart: always
+     volumes:
+       - static:/app/static/
+       - media:/app/media/
      depends_on:
        - backend
      env_file:

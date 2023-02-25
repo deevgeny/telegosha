@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -17,6 +18,13 @@ class Word(models.Model):
         verbose_name='Перевод',
         max_length=32,
         help_text='Значение на родном языке'
+    )
+    sound = models.FileField(
+        verbose_name='Голос',
+        help_text=('Файл добавлять не надо '
+                   '(он будет сгенерирован автоматически)'),
+        upload_to=settings.SOUND_PATH,
+        blank=True,
     )
 
     class Meta:
@@ -52,7 +60,7 @@ class Topic(models.Model):
         Word,
         related_name='topics',
         verbose_name='Слова',
-        help_text='Выбрать слова'
+        help_text='Выбрать минимум три слова'
     )
 
     class Meta:
@@ -124,6 +132,7 @@ class Task(models.Model):
     class Meta:
         verbose_name = 'задание'
         verbose_name_plural = 'задания'
+        ordering = ['topic__id', 'id']
         constraints = [
             models.UniqueConstraint(
                 fields=['topic', 'category', 'user'],

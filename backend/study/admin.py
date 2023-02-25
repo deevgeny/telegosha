@@ -5,7 +5,8 @@ from .models import Task, Topic, Word
 
 @admin.register(Word)
 class WordAdmin(admin.ModelAdmin):
-    list_display = ['origin', 'translation']
+    list_display = ['id', 'origin', 'translation', 'sound']
+    list_display_links = ['origin']
     search_fields = ['origin', 'translation']
 
 

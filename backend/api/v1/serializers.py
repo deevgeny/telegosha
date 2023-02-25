@@ -10,9 +10,11 @@ from study.models import Task, Word
 class WordSerializer(serializers.ModelSerializer):
     """Word model serializer."""
 
+    sound = serializers.FileField(use_url=True)
+
     class Meta:
         model = Word
-        fields = ['origin', 'translation']
+        fields = ['origin', 'translation', 'sound']
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -26,12 +28,17 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ['id', 'category', 'topic', 'data']
 
     def get_data(self, obj):
-        queryset = obj.topic.words.values_list('origin', 'translation')
         if obj.category == Task.INTRO:
-            return list(queryset)
+            request = self.context.get('request')
+            context = {'request': request}
+            serializer = WordSerializer(obj.topic.words, many=True,
+                                        context=context)
+            return serializer.data
         if obj.category in [Task.TEST, Task.LEARN]:
+            queryset = obj.topic.words.values_list('origin', 'translation')
             return prepare_test_questions(list(queryset))
         if obj.category == Task.SPELL:
+            queryset = obj.topic.words.values_list('origin', 'translation')
             return prepare_spelling_questions(list(queryset))
         return []
 

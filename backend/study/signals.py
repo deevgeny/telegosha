@@ -1,13 +1,15 @@
 import logging
 import os
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models.signals import m2m_changed, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from kombu.exceptions import OperationalError
 
-from .models import Task, Topic
-from .tasks import send_telegram_message
+from .models import Task, Topic, Word
+from .tasks import generate_sound_chain, send_telegram_message
 
 User = get_user_model()
 
@@ -25,7 +27,8 @@ logger.addHandler(handler)
 
 
 @receiver(post_save, sender=Task)
-def send_messages(sender, instance, created, **kwargs):
+def inform_user(sender, instance, created, **kwargs):
+    """Send telegram message to user when new task was created."""
     tg_id = instance.user.tg_id
     if created and tg_id:
         message = ('Привет!\n\nПоявилось новое задание: '
@@ -42,7 +45,7 @@ def send_messages(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Task)
 def create_next_task(sender, instance, **kwargs):
-    """Create next task when user completed current one."""
+    """Create next task from tasks sequence when user completed current one."""
     if not instance.active and instance.passed:
         Task.objects.get_or_create(topic=instance.topic,
                                    user=instance.user,
@@ -50,11 +53,12 @@ def create_next_task(sender, instance, **kwargs):
 
 
 @receiver(m2m_changed, sender=Topic.school_groups.through)
-def create_topic_tasks(sender, instance, action, pk_set, **kwargs):
+def create_first_topic_tasks(sender, instance, action, pk_set, **kwargs):
     """Create first tasks for new topic.
 
-    Create first topic task for every school_group user when new
+    - Create first task from task sequence for every school_group user when new
     topic is created or group is added to Topic.school_groups.
+    - Send telegram message to user about new topic.
     """
     if action == 'post_add':
         users = User.objects.filter(school_group__id__in=pk_set)
@@ -69,7 +73,31 @@ def create_topic_tasks(sender, instance, action, pk_set, **kwargs):
                  os.environ.get('TG_API_TOKEN'),
                  message) for user in users]
         try:
-            logger.info(args)
             send_telegram_message.starmap(args).delay()
         except OperationalError as exc:
             logger.error('Sending task raised: %r' % exc)
+
+
+@receiver(post_save, sender=Word)
+def create_and_add_sound_file(sender, instance, created, **kwargs):
+    """Create voice file and add it to Word instance filefield.
+
+    When new word is created in database:
+    - Generate sound file for word.origin with pyttsx3
+    - Add realative sound file path to word.sound in database
+    """
+    if created:
+        rel_path = f'{settings.SOUND_PATH}{instance.origin}.mp3'
+        abs_path = str(settings.MEDIA_ROOT / rel_path)
+        try:
+            generate_sound_chain(instance.origin, abs_path,
+                                 instance.id, rel_path)
+        except OperationalError as exc:
+            logger.error('Sending task raised: %r' % exc)
+
+
+@receiver(post_delete, sender=Word)
+def delete_word_sound(sender, instance, **kwargs):
+    """Delete sound file when word is deleted."""
+    sound = Path(instance.sound.path)
+    sound.unlink(missing_ok=True)

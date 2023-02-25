@@ -34,11 +34,17 @@ def test_user_model_str_method(user, user_no_name):
     )
 
 
-@pytest.mark.parametrize("field_name, result",
-                         (["email", True], ["username", True]))
+@pytest.mark.parametrize('field_name, result',
+                         [["username", True]])
 def test_builin_fields_unique_attribute(field_name, result):
     assert User._meta.get_field(field_name).unique == result, (
         f"User.{field_name} field should be defined as `unique={result}`"
+    )
+
+
+def test_email_field():
+    assert User._meta.get_field('email').blank, (
+        'User.email field should be defined as `blank=True`'
     )
 
 

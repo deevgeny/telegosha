@@ -51,7 +51,7 @@ def test_school_groups_field(field_attr, value):
 
 @pytest.mark.parametrize('field_attr, value',
                          [['verbose_name', 'Слова'],
-                          ['help_text', 'Выбрать слова'],
+                          ['help_text', 'Выбрать минимум три слова'],
                           ['_related_name', 'topics']])
 def test_words_field(field_attr, value):
     field = 'words'

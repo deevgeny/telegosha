@@ -132,7 +132,8 @@ def test_passed_field(field_attr, value):
 
 @pytest.mark.parametrize('class_attr, value',
                          [['verbose_name', 'задание'],
-                          ['verbose_name_plural', 'задания']])
+                          ['verbose_name_plural', 'задания'],
+                          ['ordering', ['topic__id', 'id']]])
 def test_model_meta_class(class_attr, value):
     assert getattr(Task._meta, class_attr) == value, (
         'Task model Meta class should be defined as '

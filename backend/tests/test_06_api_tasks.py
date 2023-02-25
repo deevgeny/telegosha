@@ -51,13 +51,16 @@ def test_task_response_fields(api_client, intro_task, field):
     )
 
 
-@pytest.mark.parametrize('field, value',
-                         [['category', 'intro'],
-                          ['data', [['five', 'пять'], ['four', 'четыре'],
-                                    ['one', 'один'], ['three', 'три'],
-                                    ['two', 'два']]],
-                          ['id', 1],
-                          ['topic', 'topic']])
+@pytest.mark.parametrize(
+    'field, value',
+    [['category', 'intro'],
+     ['data', [{'origin': 'five', 'translation': 'пять', 'sound': None},
+               {'origin': 'four', 'translation': 'четыре', 'sound': None},
+               {'origin': 'one', 'translation': 'один', 'sound': None},
+               {'origin': 'three', 'translation': 'три', 'sound': None},
+               {'origin': 'two', 'translation': 'два', 'sound': None}]],
+     ['id', 1],
+     ['topic', 'topic']])
 def test_intro_task_response_fields_values(api_client, intro_task, field,
                                            value):
     url = f'{TASK_URL}{intro_task.user.tg_id}/'

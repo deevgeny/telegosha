@@ -53,7 +53,7 @@ async def intro_entry_point(message: Message, state: FSMContext,
 async def start_intro(callback: CallbackQuery, state: FSMContext) -> None:
     """Start intro handler."""
     await state.set_state(Intro.in_progress)
-    await send_new_word(callback, state)
+    await send_word(callback, state)
 
 
 async def exit_intro(callback: CallbackQuery, state: FSMContext) -> None:
@@ -62,9 +62,10 @@ async def exit_intro(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.delete()
 
 
-async def send_new_word(callback: CallbackQuery, state: FSMContext) -> None:
-    """Send new word handler."""
+async def send_word(callback: CallbackQuery, state: FSMContext) -> None:
+    """Send next word handler."""
     data = await state.get_data()
+    # Prepare keyboards
     if data['left'] == 1:
         await state.set_state(Intro.show_result)
         keyboard = inline_keyboard(
@@ -79,17 +80,29 @@ async def send_new_word(callback: CallbackQuery, state: FSMContext) -> None:
     # Use negative index to get question from the list
     question = data['questions'][-data['left']]
     await state.update_data(left=data['left'] - 1)
-    await callback.message.edit_text(
-        text=f'{INTRO_LEXICON["title"]}{question[0]} - {question[1]}',
-        reply_markup=keyboard
-    )
+    await callback.message.delete()
+    # url = 'https://download.samplelib.com/mp3/sample-3s.mp3'
+    if question.get('sound'):
+        await callback.message.answer_audio(
+            caption=f'{question["origin"]} - {question["translation"]}',
+            audio=question['sound'],
+            reply_markup=keyboard
+        )
+    else:
+        await callback.message.answer(
+            text=f'{question["origin"]} - {question["translation"]}',
+            reply_markup=keyboard
+        )
 
 
 async def intro_result(callback: CallbackQuery, state: FSMContext) -> None:
     """Send intro result message and save user results to backend."""
     data = await state.get_data()
     await state.reset_state()
-    await callback.message.edit_text(text=f'{INTRO_LEXICON["result_title"]}')
+    await callback.message.delete()
+    await callback.message.answer(
+        text=f'{INTRO_LEXICON["result_title"]}'
+    )
     await backend_api.update_user_task_results(
         user_tg_id=data['user_tg_id'], task_id=data['task_id'],
         incorrect=data['left'], correct=len(data['questions'])
@@ -106,7 +119,7 @@ def register_intro_handlers(dp: Dispatcher) -> None:
                                        state=Intro.intro)
     dp.register_callback_query_handler(exit_intro, text=callbacks.EXIT,
                                        state=Intro.intro)
-    dp.register_callback_query_handler(send_new_word,
+    dp.register_callback_query_handler(send_word,
                                        text=callbacks.NEXT_QUESTION,
                                        state=Intro.in_progress)
     dp.register_callback_query_handler(intro_result,

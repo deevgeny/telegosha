@@ -20,6 +20,9 @@ def prepare_test_questions(words: list) -> list:
      {...}, ...
     ]
     """
+    incorrect_buttons = 2
+    if len(words) < 3:
+        return []
     counts = [1] * len(words)  # Sampling map
     questions = []
     for i in range(len(words)):
@@ -28,8 +31,8 @@ def prepare_test_questions(words: list) -> list:
              'buttons': [{words[i][0]: 'correct'}]}
         # Remove current word from sampling map
         counts[i] -= 1
-        # Sample 2 incorrect buttons
-        buttons = random.sample(words, counts=counts, k=2)
+        # Sample k=INCORRECT_BUTTONS incorrect buttons
+        buttons = random.sample(words, counts=counts, k=incorrect_buttons)
         # Restore current word in sampling map
         counts[i] += 1
         # Add incorrect buttons

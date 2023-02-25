@@ -82,13 +82,13 @@ async def send_word(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(left=data['left'] - 1)
     await callback.message.delete()
     if question.get('sound'):
-        # Get sound from shared docker volume
-        audio = InputFile(question['sound'])
+        # Get sound from shared docker volume ./media/sounds/file.mp3
+        audio = InputFile(f'.{question["sound"]}')
         await callback.message.answer_audio(
             caption=f'{question["origin"]} - {question["translation"]}',
             title=question['origin'],
             audio=audio,
-            # performer='Telegosha',
+            performer='Telegosha',
             reply_markup=keyboard
         )
     else:

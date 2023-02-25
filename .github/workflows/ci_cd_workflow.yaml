@@ -100,10 +100,10 @@ jobs:
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:celery-latest
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose rm -fs bot
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/telegosha:bot-latest
-          echo # Backend & database settings > .env
+          echo '# Backend & database settings' > .env
           echo POSTGRES_USER=${{ secrets.ENV_POSTGRES_USER }} >> .env
           echo POSTGRES_PASSWORD=${{ secrets.ENV_POSTGRES_PASSWORD }} >> .env
-          echo # Backend settings >> .env
+          echo '# Backend settings' >> .env
           echo DB_ENGINE=${{ secrets.ENV_DB_ENGINE }} >> .env
           echo DB_NAME=${{ secrets.ENV_DB_NAME }} >> .env
           echo DB_HOST=${{ secrets.ENV_DB_HOST }} >> .env
@@ -111,10 +111,10 @@ jobs:
           echo SECRET_KEY='${{ secrets.ENV_SECRET_KEY }}' >> .env
           echo DEBUG=${{ secrets.ENV_DEBUG }} >> .env
           echo ALLOWED_HOSTS=${{ secrets.HOST }} ${{ secrets.ENV_ALLOWED_HOSTS }} >> .env
-          echo # Bot settings >> .env
+          echo '# Bot settings' >> .env
           echo TG_API_TOKEN=${{ secrets.ENV_TG_API_TOKEN }} >> .env
           echo BACKEND_URL=${{ secrets.ENV_BACKEND_URL }} >> .env
-          echo # Celery settings >> .env
+          echo '# Celery settings' >> .env
           echo CELERY_BROKER_URL=${{ secrets.ENV_CELERY_BROKER_URL }} >> .env
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker image prune -f
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker-compose up -d

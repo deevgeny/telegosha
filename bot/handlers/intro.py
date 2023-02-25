@@ -8,6 +8,7 @@ Steps:
 - Task result is saved on server.
 """
 import logging
+from os import environ
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -84,7 +85,7 @@ async def send_word(callback: CallbackQuery, state: FSMContext) -> None:
     if question.get('sound'):
         await callback.message.answer_audio(
             caption=f'{question["origin"]} - {question["translation"]}',
-            audio=question['sound'],
+            audio=f'{environ.get("SOUND_URL")}{question["sound"]}',
             reply_markup=keyboard
         )
     else:

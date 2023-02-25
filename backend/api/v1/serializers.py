@@ -10,7 +10,7 @@ from study.models import Task, Word
 class WordSerializer(serializers.ModelSerializer):
     """Word model serializer."""
 
-    sound = serializers.FileField(use_url=True)
+    sound = serializers.FileField()
 
     class Meta:
         model = Word
@@ -29,10 +29,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_data(self, obj):
         if obj.category == Task.INTRO:
-            request = self.context.get('request')
-            context = {'request': request}
-            serializer = WordSerializer(obj.topic.words, many=True,
-                                        context=context)
+            serializer = WordSerializer(obj.topic.words, many=True)
             return serializer.data
         if obj.category in [Task.TEST, Task.LEARN]:
             queryset = obj.topic.words.values_list('origin', 'translation')

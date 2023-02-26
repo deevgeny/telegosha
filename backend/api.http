@@ -1,16 +1,16 @@
 # 
 # GET USER 1 TASKS
-GET http://127.0.0.1:8000/api/v1/tasks/1679923875/ HTTP/1.1
+GET http://127.0.0.1:8000/api/v1/tasks/tg_id/ HTTP/1.1
 
 ### 
 
 # GET USER 2 TASKS
-GET http://127.0.0.1:8000/api/v1/tasks/5874231148/ HTTP/1.1
+GET http://127.0.0.1:8000/api/v1/tasks/tg_id/ HTTP/1.1
 
 ### 
 
 # UPDATE USER 1 TASK
-PATCH http://127.0.0.1:8000/api/v1/tasks/user_id_1/1/ HTTP/1.1
+PATCH http://127.0.0.1:8000/api/v1/tasks/tg_id/task_id/ HTTP/1.1
 content-type: application/json
 
 {
@@ -21,7 +21,7 @@ content-type: application/json
 ###
 
 # UPDATE USER 2 TASK
-PATCH http://127.0.0.1:8000/api/v1/tasks/5874231148/7/ HTTP/1.1
+PATCH http://127.0.0.1:8000/api/v1/tasks/tg_id/task_id/ HTTP/1.1
 content-type: application/json
 
 {
@@ -32,11 +32,11 @@ content-type: application/json
 ###
 
 # GET USER 1 PROGRESS
-GET http://127.0.0.1:8000/api/v1/progress/5874231148/ HTTP/1.1
+GET http://127.0.0.1:8000/api/v1/progress/tg_id/ HTTP/1.1
 
 ### 
 
 # GET USER 2 PROGRESS
-GET http://127.0.0.1:8000/api/v1/progress/1679923875/ HTTP/1.1
+GET http://127.0.0.1:8000/api/v1/progress/tg_id/ HTTP/1.1
 
 ###

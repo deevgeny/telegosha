@@ -101,4 +101,5 @@ def create_and_add_sound_file(sender, instance, created, **kwargs):
 def delete_word_sound(sender, instance, **kwargs):
     """Delete sound file when word is deleted."""
     sound = Path(instance.sound.path)
-    sound.unlink(missing_ok=True)
+    if sound.is_file():
+        sound.unlink(missing_ok=True)

@@ -87,7 +87,8 @@ def create_and_add_sound_file(sender, instance, created, **kwargs):
     - Add realative sound file path to word.sound in database
     """
     if created:
-        rel_path = f'{settings.SOUND_PATH}{instance.origin}.mp3'
+        rel_path = (f'{settings.SOUND_PATH}'
+                    f'{instance.origin.replace(" ", "_")}.mp3')
         abs_path = str(settings.MEDIA_ROOT / rel_path)
         try:
             generate_sound_chain(instance.origin, abs_path,

@@ -110,7 +110,7 @@ jobs:
           echo DB_PORT=${{ secrets.ENV_DB_PORT }} >> .env
           echo SECRET_KEY='${{ secrets.ENV_SECRET_KEY }}' >> .env
           echo DEBUG=${{ secrets.ENV_DEBUG }} >> .env
-          echo ALLOWED_HOSTS=${{ secrets.HOST }} ${{ secrets.ENV_ALLOWED_HOSTS }} >> .env
+          echo ALLOWED_HOSTS=${{ secrets.ENV_ALLOWED_HOSTS }} >> .env
           echo '# Bot settings' >> .env
           echo TG_API_TOKEN=${{ secrets.ENV_TG_API_TOKEN }} >> .env
           echo BACKEND_URL=${{ secrets.ENV_BACKEND_URL }} >> .env

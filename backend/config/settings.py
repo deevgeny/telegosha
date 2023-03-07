@@ -147,3 +147,8 @@ AUTH_USER_MODEL = 'users.User'
 # Celery
 
 CELERY_BROKER_URL = environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/')
+
+
+# CSRF trusted origins (when using https with reverse-proxy)
+
+CSRF_TRUSTED_ORIGINS = environ.get('CSRF_TRUSTED_ORIGINS', '').split()

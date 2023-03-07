@@ -111,9 +111,12 @@ jobs:
           echo SECRET_KEY='${{ secrets.ENV_SECRET_KEY }}' >> .env
           echo DEBUG=${{ secrets.ENV_DEBUG }} >> .env
           echo ALLOWED_HOSTS=${{ secrets.ENV_ALLOWED_HOSTS }} >> .env
+          echo CSRF_TRUSTED_ORIGINS=${{ secrets.ENV_CSRF_TRUSTED_ORIGINS }} >> .env
           echo '# Bot settings' >> .env
           echo TG_API_TOKEN=${{ secrets.ENV_TG_API_TOKEN }} >> .env
           echo BACKEND_URL=${{ secrets.ENV_BACKEND_URL }} >> .env
+          echo WEBHOOK_HOST=${{ secrets.ENV_WEBHOOK_HOST }} >> .env
+          echo WEBHOOK_PATH=${{ secrets.ENV_WEBHOOK_PATH }} >> .env
           echo '# Celery settings' >> .env
           echo CELERY_BROKER_URL=${{ secrets.ENV_CELERY_BROKER_URL }} >> .env
           echo '${{ secrets.HOST_USER_PASSWORD }}' | sudo -S docker image prune -f

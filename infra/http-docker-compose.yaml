@@ -26,7 +26,7 @@ services:
       - ./.env
   
   celery:
-     image: deevgeny/telegosha:celery-latest
+     image: deevgeny/telegosha:backend-latest
      restart: always
      volumes:
        - static:/app/static/
@@ -35,6 +35,7 @@ services:
        - backend
      env_file:
         - ./.env
+     command: celery -A config worker -l INFO
   
   bot:
     image: deevgeny/telegosha:bot-latest

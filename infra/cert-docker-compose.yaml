@@ -18,4 +18,4 @@ services:
       - ./certbot/webroot:/var/www/certbot
     depends_on:
       - nginx
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email evgenyderiglazov@yandex.ru -d telegosha.ru --agree-tos
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email {your email} -d {your domain} --agree-tos

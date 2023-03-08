@@ -64,6 +64,56 @@ mp3 файла с его произношением. Этот файл испо�
 для изучения произношения. Текущая версия пока работает только с английскими
 словами.
 
+## Способы запуска проекта
+В папке infra собрана коллекция файлов для различных способов запуска проекта.
+- Работа через http протокол с ip адресом или доменным именем и обычным
+поллингом
+  - http_nginx.conf
+  - http-docker-compose.yaml
+- Работа через https протокол c доменным именем и вебхуком
+  - https_nginx.conf
+  - https-docker-compose.yaml
+- Генерация ssl сертификата для домена
+  - cert_nginx.conf
+  - cert-docker-compose.yaml
+
+## Генерация ssl сертификата
+Перед запуском проекта через https протокол необходимо сначала сгенерировать 
+ и установить ssl сертифика. 
+Генерация сертификата происходит автоматически. Для этого достаточно один раз 
+запустить контейнеры с помощью docker-compose файла.
+1. Сначала необходимо скопировать файлы `cert_nginx.conf` и 
+`cert-docker-compose.yaml` на сервер и переименовать их удалив префикс `cert`: 
+```sh
+scp cert_nginx.conf cert-docker-compose.yaml <username>@<server-ip>:~
+```
+2. Затем внести изменения в файлы `nginx.conf` и `docker-compose.yaml` в 
+указанных местах:
+```
+# nginx.conf
+...
+server {
+    listen 80;
+    server_name _; # Replace _ with your domain name
+...
+}
+# docker-compose.yaml
+...
+command: certonly --webroot -w /var/www/certbot --force-renewal --email {your email} -d {your domain} --agree-tos
+...
+```
+3. После этого запустить контейнеры с выводом в терминал, чтобы можно было 
+проконтролировать результат: 
+```sh
+sudo docker-compose up
+```
+4. В завершении контейнеры и файлы `nginx.conf` и `docker-compose.yaml` можно 
+удалить, так как они больше не нужны:
+```sh
+sudo docker-compose down
+rm nginx.conf docker-compose.yaml
+```
+
 ## Как запустить проект на сервере
 1. Перед запуском проекта необходимо подготовить .env файл с переменными. В 
 папке ifra есть пример такого файла:
@@ -78,61 +128,47 @@ DB_HOST=database
 DB_PORT=5432
 SECRET_KEY=<your django secret key>
 DEBUG=0
-ALLOWED_HOSTS=127.0.0.1 backend # Add server ip here when deployed
+ALLOWED_HOSTS=127.0.0.1 backend # Add server ip or domain here when deployed
+CSRF_TRUSTED_ORIGINS=https://example.com # your domain name required when using https
 # Bot settings
 TG_API_TOKEN=<your telegram bot token>
+WEBHOOK_HOST=https://example.com # your domain name required when using webhook
+WEBHOOK_PATH=/example_path/ # required when using webhook, should be same as location in nginx.conf proxy_pass to bot container (http://bot:8000)
 BACKEND_URL=http://backend:8000/api/v1/
 # Celery settings
 CELERY_BROKER_URL=redis://redis:6379/
 ```
 
-2. Изменить настройки файла nginx.conf заменив ip адрес 127.0.0.1 на доменное 
-имя или ip адрес сервера. Так как текущая версия работает с Telgram Bot API 
-через обычный поллинг, то дополнительная настройка https не требуется. 
+2. Скопировать файлы выбранного метода запуска из папки infra
+(*_nginx.conf, *-docker-compose.yaml, .env) на сервер: 
+```sh
+scp *_nginx.conf *-docker-compose.yaml .env username@host:~
+```
+
+3. Переименовать файлы удалив префикс способа запуска, чтобы в результате 
+на сервере лежало три файла: `nginx.conf`, `docker-compose.yaml`, `.env`
+
+4. Изменить настройки файла nginx.conf во всех указанных местах. В случае с 
+https так же нужно внести корректировки в файл `docker-compose.yaml`. 
 ```
 server {
-    server_tokens off;
-    server_name 127.0.0.1;
+    server_name _; # Replace _ with domain name or ip
     listen 80;
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-
-    location /static/ {
-        autoindex on;
-        alias /app/static/;
-    }
-
-    location /media/ {
-        autoindex on;
-        alias /app/media/;
-    }
-
-    location /admin/ {
-        proxy_set_header        Host $host;
-        proxy_set_header        X-Forwarded-Host $host;
-        proxy_set_header        X-Forwarded-Server $host;
-        proxy_pass http://backend:8000/admin/;
-    }
+    ...
 } 
 ```
 
-3. Скопировать файлы из папки infra (nginx.conf, docker-compose.yaml, .env) на
-сервер:
-```sh
-scp nginx.conf docker-compose.yaml .env username@host:~
-```
-
-4. Установить на сервере библиотеки для генерации звуковых файлов:
+5. Установить на сервере библиотеки для генерации звуковых файлов:
 ```sh
 sudo apt-get update && apt-get install -y espeak ffmpeg
 ```
 
-5. Запустить проект на сервере:
+6. Запустить проект на сервере:
 ```sh
 sudo docker-compose up -d
 ```
 
-6. В контейнере бэкэнда собрать статику, выполнить миграции и создать
+7. В контейнере бэкэнда собрать статику, выполнить миграции и создать
 суперпользователя.
 ```sh
 sudo docker-compose exec -T backend python manage.py makemigrations
@@ -144,6 +180,23 @@ sudo docker-compose exec -T backend python manage.py create_admin \
 --password <your password> 
 ```
 
-7. Зайти на админ сайт проекта с данными суперпользователя
+8. Зайти на админ сайт проекта с данными суперпользователя
 
 http://ваш-ip-или-домен/admin/
+
+
+## Обновление ssl сертификата
+
+Для обновления ssl сертификата достаточно вручную в терминале выполнить 
+команду:
+```sh
+sudo docker-compose up certbot
+```
+
+Или можно добавить эту задачу в cron, чтобы она выполнялась один раз в два 
+месяца:
+```sh
+crontab -e
+
+0 0 1 */2 * /usr/local/bin/docker-compose -f /home/<usename>/docker-compose.yaml up certbot
+```

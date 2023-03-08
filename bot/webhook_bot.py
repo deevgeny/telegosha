@@ -1,58 +1,76 @@
 import logging
 import os
 
-from aiogram import Bot, types
+from aiogram import Bot, Dispatcher, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
-from aiogram.dispatcher import Dispatcher
-# from aiogram.dispatcher.webhook import SendMessage
 from aiogram.utils.executor import start_webhook
 from dotenv import load_dotenv
 
+from handlers.intro import register_intro_handlers
+from handlers.learn import register_learn_handlers
+from handlers.menu import register_menu_handlers
+from handlers.progress import register_progress_handlers
+from handlers.spelling import register_spelling_handlers
+from handlers.tasks import register_tasks_handlers
+from handlers.test import register_test_handlers
+from keyboards.main_menu import set_main_menu
+
 load_dotenv()
 
-TG_API_TOKEN = os.getenv('TG_API_TOKEN')
-WEBHOOK_HOST = 'https://telegosha.ru'
-WEBHOOK_PATH = '/webhook/'
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+TG_API_TOKEN: str = os.getenv('TG_API_TOKEN', '')
+WEBHOOK_HOST: str = os.getenv('WEBHOOK_HOST', '')
+WEBHOOK_PATH: str = os.getenv('WEBHOOK_PATH', '')
+WEBHOOK_URL: str = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+WEBAPP_HOST: str = '0.0.0.0'
+WEBAPP_PORT: int = 8000
 
-
-WEBAPP_HOST = '0.0.0.0'
-WEBAPP_PORT = 8000
-
-logging.basicConfig(level=logging.INFO)
-bot = Bot(token=TG_API_TOKEN)
-dp = Dispatcher(bot)
+logger: logging = logging.getLogger(__name__)
+storage: MemoryStorage = MemoryStorage()
+bot: Bot = Bot(token=TG_API_TOKEN, parse_mode=types.ParseMode.HTML)
+dp: Dispatcher = Dispatcher(bot, storage=storage)
 dp.middleware.setup(LoggingMiddleware())
 
 
-@dp.message_handler()
-async def echo(message: types.Message):
-    # Regular request
-    await message.answer('Привет!')
-    # or reply INTO webhook
-    # return SendMessage(message.chat.id, message.text)
-
-
 async def on_startup(dp):
-    logging.info('Start webhook...')
+    logging.info('Setting webhook...')
     await bot.set_webhook(WEBHOOK_URL)
-    # insert code here to run it after start
+
+    # Set up main menu
+    logging.info('Setting main menu...')
+    set_main_menu(dp)
+
+    logging.info('Registering handlers...')
+    # Register handlers
+    register_menu_handlers(dp)
+    register_learn_handlers(dp)
+    register_test_handlers(dp)
+    register_tasks_handlers(dp)
+    register_spelling_handlers(dp)
+    register_progress_handlers(dp)
+    register_intro_handlers(dp)
 
 
 async def on_shutdown(dp):
-    logging.warning('Shutting down..')
-    # insert code here to run it before shutdown
-    # Remove webhook (not acceptable in some cases)
+    logging.warning('Deleting webhook...')
+    # Delete webhook
     await bot.delete_webhook()
+
+    logging.warning('Closing storage connection...')
     # Close DB connection (if used)
     await dp.storage.close()
     await dp.storage.wait_closed()
+    logging.warning('Closing bot...')
+    await bot.close()
     logging.warning('Bye!')
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    logging.info('Start up the bot...')
+    logging.basicConfig(
+        level=logging.INFO,
+        format=u'%(filename)s:%(lineno)d #%(levelname)-8s '
+               u'[%(asctime)s] - %(name)s - %(message)s')
+    logger.info('Starting bot...')
     start_webhook(
         dispatcher=dp,
         webhook_path=WEBHOOK_PATH,

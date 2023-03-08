@@ -26,7 +26,7 @@ services:
       - ./.env
   
   celery:
-     image: deevgeny/telegosha:celery-latest
+     image: deevgeny/telegosha:backend-latest
      restart: always
      volumes:
        - static:/app/static/
@@ -35,10 +35,13 @@ services:
        - backend
      env_file:
         - ./.env
+     command: celery -A config worker -l INFO
   
   bot:
     image: deevgeny/telegosha:bot-latest
     restart: always
+    expose:
+      - "8000"
     volumes:
       - media:/app/media/
     depends_on:
@@ -46,9 +49,11 @@ services:
       - celery
     env_file:
       - ./.env
+    command: python -m webhook_bot
 
   nginx:
     image: nginx:1.21.3-alpine
+    restart: always
     ports:
       - "80:80"
       - "443:443"

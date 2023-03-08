@@ -8,6 +8,4 @@ RUN pip install -r requirements.txt --no-cache-dir --upgrade pip --root-user-act
 
 COPY . .
 
-EXPOSE 8000
-
-CMD ["python", "-m", "bot"]
+CMD ["python", "-m", "polling_bot"]

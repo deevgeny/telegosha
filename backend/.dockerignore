@@ -6,3 +6,4 @@ setup.cfg
 .pytest_cache
 *.mp3
 .gitkeep
+Dockerfile

@@ -1,5 +1,5 @@
 # Телегоша
-
+[![MIT License](https://img.shields.io/github/license/deevgeny/telegosha)](https://github.com/deevgeny/telegosha/blob/main/LICENSE)
 ![tests workflow](https://github.com/deevgeny/telegosha/actions/workflows/tests_workflow.yaml/badge.svg)
 ![CI/CD workflow](https://github.com/deevgeny/telegosha/actions/workflows/ci_cd_workflow.yaml/badge.svg)
 
